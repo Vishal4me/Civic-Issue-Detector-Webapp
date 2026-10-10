@@ -38,10 +38,10 @@
   </div>
 
   <div class="ticket capture-stage" id="camera-card">
-    <p class="ticket__label">01 — Take a photo</p>
+    <p class="ticket__label">1. Take a photo</p>
 
-    <video id="video" autoplay playsinline class="visually-hidden"></video>
-    <img id="preview" class="capture-preview visually-hidden" alt="Captured photo of the issue">
+    <video id="video" autoplay playsinline class="hidden"></video>
+    <img id="preview" class="capture-preview hidden" alt="Captured photo of the issue">
     <canvas id="canvas" class="visually-hidden"></canvas>
 
     <div id="camera-placeholder">
@@ -71,7 +71,7 @@
   </div>
 
   <div class="ticket hidden" id="location-card">
-    <p class="ticket__label">02 — Location</p>
+    <p class="ticket__label">2. Location</p>
     <div id="location-status" class="status-line status-line--muted">
       <span data-icon="pin" data-icon-class="icon icon--sm"></span>
       <span id="location-text">Getting your location…</span>
@@ -79,7 +79,7 @@
   </div>
 
   <div class="ticket hidden" id="classify-card">
-    <p class="ticket__label">03 — What's the issue?</p>
+    <p class="ticket__label">3. What's the issue?</p>
     <div id="classify-status" class="status-line status-line--muted">
       <span data-icon="warning" data-icon-class="icon icon--sm"></span>
       <span>Analyzing photo…</span>

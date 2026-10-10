@@ -76,11 +76,20 @@ const CATEGORY_META = {
   water_leakage:       { label: 'Water leakage',       icon: 'water' },
 };
 
-const map = L.map('map').setView([26.8467, 80.9462], 12); // default: Lucknow
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors',
-  maxZoom: 19,
-}).addTo(map);
+// Guarded: if the Leaflet CDN is slow, blocked, or ad-blocked, the map
+// silently stays out — stats and the report list must not go down with it.
+let map = null;
+try {
+  map = L.map('map').setView([26.8467, 80.9462], 12); // default: Lucknow
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19,
+  }).addTo(map);
+} catch (e) {
+  console.warn('Map unavailable:', e);
+  const mapFrame = document.querySelector('.map-frame');
+  if (mapFrame) mapFrame.innerHTML = '<div class="empty-state">Map could not load. Reports are still listed below.</div>';
+}
 let markers = [];
 
 function stageIndex(status) {
@@ -147,7 +156,7 @@ async function loadReports() {
   const list = document.getElementById('reports-list');
   const emptyState = document.getElementById('empty-state');
   list.innerHTML = '';
-  markers.forEach(m => map.removeLayer(m));
+  if (map) markers.forEach(m => map.removeLayer(m));
   markers = [];
 
   if (reports.length === 0) {
@@ -187,13 +196,17 @@ async function loadReports() {
     });
     list.appendChild(card);
 
-    const marker = L.marker([r.latitude, r.longitude]).addTo(map);
-    marker.bindPopup(`<b>${meta.label}</b><br>${r.status}<br>${r.address}`);
-    markers.push(marker);
+    if (map) {
+      const marker = L.marker([r.latitude, r.longitude]).addTo(map);
+      marker.bindPopup(`<b>${meta.label}</b><br>${r.status}<br>${r.address}`);
+      markers.push(marker);
+    }
   });
 
-  const group = L.featureGroup(markers);
-  map.fitBounds(group.getBounds().pad(0.3));
+  if (map && markers.length) {
+    const group = L.featureGroup(markers);
+    map.fitBounds(group.getBounds().pad(0.3));
+  }
 }
 
 async function refresh() {

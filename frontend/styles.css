@@ -428,6 +428,8 @@ footer.site-footer {
   clip: rect(0 0 0 0); white-space: nowrap;
 }
 
+.hidden { display: none !important; }
+
 @media (max-width: 560px) {
   .report-ticket { grid-template-columns: 60px 1fr; }
   .report-ticket__photo { width: 60px; height: 60px; }
