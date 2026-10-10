@@ -32,9 +32,39 @@
 
 <main class="page page--narrow">
 
+  <div class="stripe-bar"></div>
   <div class="hero">
-    <h1>Spot something broken?</h1>
-    <p>Snap a photo. Streetline finds your location, flags the issue type, and alerts the department that handles it.</p>
+    <div class="hero__inner">
+      <h1>Spot something broken?</h1>
+      <p>Snap a photo. Streetline finds your location, flags the issue type, and alerts the department that handles it.</p>
+
+      <div class="signpost">
+        <div class="signpost__item">
+          <div class="signpost__tag">
+            <span data-icon="pothole" data-icon-class="icon"></span>
+            <span class="signpost__label">Pothole</span>
+          </div>
+        </div>
+        <div class="signpost__item">
+          <div class="signpost__tag">
+            <span data-icon="garbage" data-icon-class="icon"></span>
+            <span class="signpost__label">Garbage</span>
+          </div>
+        </div>
+        <div class="signpost__item">
+          <div class="signpost__tag">
+            <span data-icon="streetlight" data-icon-class="icon"></span>
+            <span class="signpost__label">Streetlight</span>
+          </div>
+        </div>
+        <div class="signpost__item">
+          <div class="signpost__tag">
+            <span data-icon="water" data-icon-class="icon"></span>
+            <span class="signpost__label">Water leak</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="ticket capture-stage" id="camera-card">
@@ -88,28 +118,28 @@
       <div id="confidence-flag" class="flag"></div>
       <div class="category-grid" id="category-grid" role="group" aria-label="Issue category">
         <button type="button" class="category-tile" data-category="pothole" aria-pressed="false">
-          <span data-icon="pothole" data-icon-class="icon icon--lg"></span>
+          <span class="cat-chip cat-chip--pothole"><span data-icon="pothole" data-icon-class="icon"></span></span>
           <span class="category-tile__name">Pothole</span>
           <span class="category-tile__detected hidden" data-role="detected-badge">
             <span data-icon="check" data-icon-class="icon icon--sm"></span> Detected
           </span>
         </button>
         <button type="button" class="category-tile" data-category="garbage" aria-pressed="false">
-          <span data-icon="garbage" data-icon-class="icon icon--lg"></span>
+          <span class="cat-chip cat-chip--garbage"><span data-icon="garbage" data-icon-class="icon"></span></span>
           <span class="category-tile__name">Garbage</span>
           <span class="category-tile__detected hidden" data-role="detected-badge">
             <span data-icon="check" data-icon-class="icon icon--sm"></span> Detected
           </span>
         </button>
         <button type="button" class="category-tile" data-category="broken_streetlight" aria-pressed="false">
-          <span data-icon="streetlight" data-icon-class="icon icon--lg"></span>
+          <span class="cat-chip cat-chip--broken_streetlight"><span data-icon="streetlight" data-icon-class="icon"></span></span>
           <span class="category-tile__name">Broken streetlight</span>
           <span class="category-tile__detected hidden" data-role="detected-badge">
             <span data-icon="check" data-icon-class="icon icon--sm"></span> Detected
           </span>
         </button>
         <button type="button" class="category-tile" data-category="water_leakage" aria-pressed="false">
-          <span data-icon="water" data-icon-class="icon icon--lg"></span>
+          <span class="cat-chip cat-chip--water_leakage"><span data-icon="water" data-icon-class="icon"></span></span>
           <span class="category-tile__name">Water leakage</span>
           <span class="category-tile__detected hidden" data-role="detected-badge">
             <span data-icon="check" data-icon-class="icon icon--sm"></span> Detected
@@ -128,7 +158,7 @@
 
 </main>
 
-<footer class="site-footer">Detection is a baseline heuristic — confirm the category above before submitting.</footer>
+<footer class="site-footer">Detection is a baseline heuristic. Confirm the category above before submitting.</footer>
 
 <script src="icons.js"></script>
 <script>
@@ -277,7 +307,7 @@ async function runClassification() {
     selectCategory(data.category, { fromDetection: true });
 
     confidenceFlag.innerHTML = data.needs_review
-      ? icon('warning', 'icon icon--sm') + ` Low confidence (${pct}%) — please check this`
+      ? icon('warning', 'icon icon--sm') + ` Low confidence (${pct}%). Please check this.`
       : icon('check', 'icon icon--sm') + ` Detected with ${pct}% confidence`;
     confidenceFlag.className = 'flag ' + (data.needs_review ? 'flag--caution' : 'flag--good');
 
@@ -286,7 +316,7 @@ async function runClassification() {
     maybeShowSubmit();
   } catch (e) {
     lastConfidence = 0;
-    confidenceFlag.innerHTML = icon('warning', 'icon icon--sm') + ' Detection failed — pick the category manually';
+    confidenceFlag.innerHTML = icon('warning', 'icon icon--sm') + ' Detection failed. Pick the category manually';
     confidenceFlag.className = 'flag flag--bad';
     hide(classifyStatus);
     show(classifyResult);

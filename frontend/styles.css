@@ -27,6 +27,17 @@
   --progress-amber: #B3690A; /* in progress */
   --progress-amber-tint: #F3E4D1;
 
+  /* category accents — each issue type gets its own identity, like a
+     utility map's color-coded lines (water = teal, power = yellow) */
+  --cat-pothole: var(--stop-red);
+  --cat-pothole-tint: var(--stop-red-tint);
+  --cat-garbage: #5C6B3F;
+  --cat-garbage-tint: #E7E9DC;
+  --cat-streetlight: var(--caution);
+  --cat-streetlight-tint: var(--caution-tint);
+  --cat-water: #0E7C86;
+  --cat-water-tint: #DCEBEC;
+
   /* --- type --- */
   --font-display: "Big Shoulders", "Arial Narrow", sans-serif;
   --font-body: "Public Sans", -apple-system, "Segoe UI", sans-serif;
@@ -135,19 +146,110 @@ a { color: var(--route-blue); }
 .page { max-width: 1080px; margin: 0 auto; padding: var(--sp-6) var(--sp-5) var(--sp-8); }
 .page--narrow { max-width: 520px; }
 
-.hero { margin-bottom: var(--sp-6); }
+/* Caution-tape accent — used sparingly, above the hero and nowhere else,
+   so it reads as a signal (something starts here) rather than wallpaper. */
+.stripe-bar {
+  height: 7px;
+  background: repeating-linear-gradient(45deg,
+    var(--caution) 0 16px, var(--ink) 16px 32px);
+  border: 2px solid var(--line-strong);
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.hero {
+  margin: 0 0 var(--sp-6);
+  background: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--line-strong);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: var(--sp-7) var(--sp-5) var(--sp-6);
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: repeating-linear-gradient(135deg,
+    rgba(239,237,230,0.055) 0 2px, transparent 2px 28px);
+  pointer-events: none;
+}
+.hero__inner { position: relative; }
 .hero h1 {
-  font-size: clamp(32px, 5vw, 48px);
+  font-size: clamp(32px, 5vw, 50px);
   line-height: 1.05;
   text-transform: uppercase;
   max-width: 14ch;
+  color: var(--paper);
+  opacity: 0;
+  transform: translateY(10px);
+  animation: hero-in 0.5s ease-out 0.05s forwards;
 }
 .hero p {
   margin: var(--sp-3) 0 0;
-  color: var(--ink-soft);
+  color: rgba(239,237,230,0.78);
   font-size: 17px;
   max-width: 48ch;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: hero-in 0.5s ease-out 0.18s forwards;
 }
+@keyframes hero-in { to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .hero h1, .hero p { animation: none; opacity: 1; transform: none; }
+}
+
+/* Signpost — a row of hanging signs off a dashed wire. Reused for the
+   category picker's intro (report.html) and the stage legend
+   (dashboard.html): same component, different content. */
+.signpost {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 2px dashed rgba(239,237,230,0.3);
+  position: relative;
+}
+.signpost__item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.signpost__item::before {
+  content: '';
+  position: absolute; top: -2px;
+  width: 2px; height: 18px;
+  background: rgba(239,237,230,0.3);
+  transform: translateY(-18px);
+}
+.signpost__tag {
+  background: var(--paper-raised);
+  color: var(--ink);
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: 8px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  width: 100%;
+}
+.signpost__tag .icon { width: 18px; height: 18px; }
+.signpost__label { font-size: 10.5px; font-weight: 700; text-align: center; line-height: 1.15; }
+
+/* Per-category icon chip — a colored roundel behind the pictogram */
+.cat-chip {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cat-chip .icon { color: var(--paper-raised); width: 22px; height: 22px; }
+.cat-chip--pothole { background: var(--cat-pothole); }
+.cat-chip--garbage { background: var(--cat-garbage); }
+.cat-chip--broken_streetlight { background: var(--cat-streetlight); color: var(--ink); }
+.cat-chip--broken_streetlight .icon { color: var(--ink); }
+.cat-chip--water_leakage { background: var(--cat-water); }
+.cat-chip--sm { width: 32px; height: 32px; }
+.cat-chip--sm .icon { width: 16px; height: 16px; }
 
 /* ---------------------------------------------------------------------
    Ticket card — the base surface for anything "on the record":
@@ -185,9 +287,10 @@ a { color: var(--route-blue); }
   gap: var(--sp-2);
   background: var(--paper-raised);
   color: var(--ink);
-  transition: transform 0.08s ease;
+  transition: transform 0.1s ease, border-color 0.1s ease;
 }
-.btn:active { transform: translateY(1px); }
+.btn:hover:not(:disabled) { transform: translateY(-2px); }
+.btn:active:not(:disabled) { transform: translateY(0); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn--primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .btn--primary:hover:not(:disabled) { background: #30353c; }
@@ -210,18 +313,20 @@ a { color: var(--route-blue); }
   border-radius: var(--radius);
   background: var(--paper-raised);
   padding: var(--sp-4) var(--sp-3);
-  display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2);
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-3);
   cursor: pointer;
   font-family: var(--font-body);
   text-align: left;
+  transition: transform 0.12s ease, border-color 0.12s ease;
 }
-.category-tile .icon { color: var(--ink-soft); }
+.category-tile:hover { transform: translateY(-2px); border-color: var(--route-blue); }
+.category-tile:active { transform: translateY(0); }
 .category-tile__name { font-weight: 700; font-size: 14px; }
 .category-tile[aria-pressed="true"] {
   background: var(--ink);
   color: var(--paper);
+  border-color: var(--ink);
 }
-.category-tile[aria-pressed="true"] .icon { color: var(--caution); }
 .category-tile__detected {
   font-size: 11px; font-weight: 700; color: var(--go-green);
   display: flex; align-items: center; gap: 4px;
@@ -240,6 +345,7 @@ a { color: var(--route-blue); }
 .flag--good { background: var(--go-green-tint); color: var(--go-green); }
 .flag--caution { background: var(--caution-tint); color: #8a5d00; }
 .flag--bad { background: var(--stop-red-tint); color: var(--stop-red); }
+.flag--sm { font-size: 11px; padding: 4px 9px; }
 
 /* ---------------------------------------------------------------------
    Route / stage rail — THE signature element. A literal transit line
@@ -328,6 +434,8 @@ a { color: var(--route-blue); }
   background: var(--paper-raised);
   padding: var(--sp-4);
 }
+.stat__head { display: flex; align-items: center; justify-content: space-between; }
+.stat__icon { color: var(--line-strong); opacity: 0.35; }
 .stat__num {
   font-family: var(--font-display);
   font-weight: 800;
@@ -374,7 +482,11 @@ a { color: var(--route-blue); }
 /* ---------------------------------------------------------------------
    Report tickets list
    --------------------------------------------------------------------- */
-.report-ticket { display: grid; grid-template-columns: 76px 1fr; gap: var(--sp-4); }
+.report-ticket {
+  display: grid; grid-template-columns: 76px 1fr; gap: var(--sp-4);
+  border-left-width: 8px;
+  transition: border-color 0.12s ease;
+}
 .report-ticket__photo {
   width: 76px; height: 76px; object-fit: cover; border-radius: var(--radius);
   border: 2px solid var(--line-strong);
@@ -383,12 +495,60 @@ a { color: var(--route-blue); }
 .report-ticket__head {
   display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap;
 }
-.report-ticket__title { display: flex; align-items: center; gap: var(--sp-2); }
-.report-ticket__title .icon { color: var(--ink-soft); }
+.report-ticket__title { display: flex; align-items: center; gap: var(--sp-3); }
 .report-ticket__category { font-weight: 800; font-size: 16px; }
 .report-ticket__id { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
 .report-ticket__address { color: var(--ink-soft); font-size: 13.5px; margin-top: 2px; display: flex; gap: 5px; align-items: flex-start; }
 .report-ticket__address .icon { margin-top: 1px; }
+
+.report-ticket--pothole { border-left-color: var(--cat-pothole); }
+.report-ticket--garbage { border-left-color: var(--cat-garbage); }
+.report-ticket--broken_streetlight { border-left-color: var(--cat-streetlight); }
+.report-ticket--water_leakage { border-left-color: var(--cat-water); }
+
+/* Active filter chip, shown when a stage-overview stop is clicked */
+.filter-chip {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  background: var(--ink); color: var(--paper);
+  border-radius: var(--radius);
+  padding: 7px 8px 7px 14px;
+  font-size: 13px; font-weight: 700;
+  margin-bottom: var(--sp-4);
+}
+.filter-chip button {
+  background: rgba(239,237,230,0.15); color: var(--paper);
+  border: none; border-radius: 50%;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 14px; line-height: 1;
+}
+.filter-chip button:hover { background: rgba(239,237,230,0.3); }
+
+.stage-overview__stop {
+  cursor: pointer;
+  background: transparent; border: none;
+  font-family: var(--font-body);
+  padding: var(--sp-2);
+  border-radius: var(--radius);
+  transition: background 0.12s ease;
+}
+.stage-overview__stop:hover { background: var(--line); background: rgba(0,0,0,0.04); }
+.stage-overview__stop--active { background: var(--caution-tint); }
+.stage-overview__stop--active .rail__dot { border-color: var(--caution); }
+
+/* Live indicator dot */
+.live-dot {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--go-green);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+}
 
 .empty-state {
   text-align: center;

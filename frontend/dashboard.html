@@ -33,17 +33,37 @@
 
 <main class="page">
 
+  <div class="stripe-bar"></div>
   <div class="hero">
-    <h1>Every report, one line at a time.</h1>
-    <p>Track each issue from first report to fixed. Click a stop on any report's line to move it forward.</p>
+    <div class="hero__inner">
+      <h1>Every report, one line at a time.</h1>
+      <p>Track each issue from first report to fixed. Click a stop on any report's line to move it forward.</p>
+
+      <div class="signpost">
+        <div class="signpost__item">
+          <div class="signpost__tag"><span data-icon="flag" data-icon-class="icon"></span><span class="signpost__label">Reported</span></div>
+        </div>
+        <div class="signpost__item">
+          <div class="signpost__tag"><span data-icon="clipboard" data-icon-class="icon"></span><span class="signpost__label">Acknowledged</span></div>
+        </div>
+        <div class="signpost__item">
+          <div class="signpost__tag"><span data-icon="wrench" data-icon-class="icon"></span><span class="signpost__label">In progress</span></div>
+        </div>
+        <div class="signpost__item">
+          <div class="signpost__tag"><span data-icon="check" data-icon-class="icon"></span><span class="signpost__label">Resolved</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="stats" id="stats-row"></div>
 
   <div class="stage-overview">
-    <p class="stage-overview__title">Reports by stage, right now</p>
+    <p class="stage-overview__title">Reports by stage, right now. Click a stage to filter the list below.</p>
     <div class="stage-overview__rail" id="stage-overview-rail"></div>
   </div>
+
+  <div id="filter-chip-row"></div>
 
   <div class="map-frame"><div id="map"></div></div>
 
@@ -55,7 +75,10 @@
 
 </main>
 
-<footer class="site-footer">Dashboard refreshes automatically every 15 seconds.</footer>
+<footer class="site-footer">
+  <span class="live-dot" aria-hidden="true"></span>
+  <span id="live-status">Live. Updated just now.</span>
+</footer>
 
 <script src="icons.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -97,6 +120,27 @@ function stageIndex(status) {
   return i === -1 ? 0 : i;
 }
 
+let activeFilter = null; // a STAGES[].key, or null for "show everything"
+
+// Tweens a number's displayed value from whatever it currently shows to
+// `target`, so a changing count draws the eye instead of just jump-cutting.
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function animateNumber(el, target, suffix = '') {
+  const start = parseInt(el.dataset.value || '0', 10);
+  el.dataset.value = target;
+  if (start === target || prefersReducedMotion) { el.textContent = target + suffix; return; }
+  const duration = 450;
+  const t0 = performance.now();
+  function tick(now) {
+    const p = Math.min(1, (now - t0) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(start + (target - start) * eased) + suffix;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
 // Builds a route rail. `current` = stage index. `onPick`, if given, makes
 // each stop a clickable button (used on report tickets to change status).
 function renderRail({ current, size = '', onPick }) {
@@ -121,26 +165,74 @@ function renderRail({ current, size = '', onPick }) {
   </div>`;
 }
 
+// First call builds the DOM nodes; later calls just re-tween the numbers
+// in place, so the stat tiles and overview don't flicker on every refresh.
+let statsBuilt = false;
+
 async function loadStats() {
   const res = await fetch(`${API_BASE}/stats`);
   const data = await res.json();
-  const row = document.getElementById('stats-row');
   const resolvedPct = data.total ? Math.round((data.resolved / data.total) * 100) : 0;
-  row.innerHTML = `
-    <div class="stat stat--blue"><div class="stat__num">${data.total}</div><div class="stat__label">Total reports</div></div>
-    <div class="stat stat--green"><div class="stat__num">${resolvedPct}%</div><div class="stat__label">Resolution rate</div></div>
-    <div class="stat stat--amber"><div class="stat__num">${data.by_status['In Progress'] || 0}</div><div class="stat__label">In progress</div></div>
-    <div class="stat stat--red"><div class="stat__num">${data.by_status['Reported'] || 0}</div><div class="stat__label">Awaiting action</div></div>
-  `;
 
-  const overviewEl = document.getElementById('stage-overview-rail');
-  overviewEl.innerHTML = STAGES.map(stage => `
-    <div class="stage-overview__stop">
-      <div class="rail__dot" style="margin:0 auto 8px">${icon(stage.icon, 'icon icon--sm')}</div>
-      <div class="stage-overview__count">${data.by_status[stage.key] || 0}</div>
-      <div class="rail__label">${stage.label}</div>
-    </div>
-  `).join('');
+  if (!statsBuilt) {
+    const row = document.getElementById('stats-row');
+    row.innerHTML = `
+      <div class="stat stat--blue"><div class="stat__head">${icon('clipboard', 'icon stat__icon')}</div><div class="stat__num" id="stat-total">0</div><div class="stat__label">Total reports</div></div>
+      <div class="stat stat--green"><div class="stat__head">${icon('check', 'icon stat__icon')}</div><div class="stat__num" id="stat-resolved-pct">0%</div><div class="stat__label">Resolution rate</div></div>
+      <div class="stat stat--amber"><div class="stat__head">${icon('wrench', 'icon stat__icon')}</div><div class="stat__num" id="stat-in-progress">0</div><div class="stat__label">In progress</div></div>
+      <div class="stat stat--red"><div class="stat__head">${icon('flag', 'icon stat__icon')}</div><div class="stat__num" id="stat-awaiting">0</div><div class="stat__label">Awaiting action</div></div>
+    `;
+
+    const overviewEl = document.getElementById('stage-overview-rail');
+    overviewEl.innerHTML = STAGES.map(stage => `
+      <button type="button" class="stage-overview__stop" data-stage-key="${stage.key}">
+        <div class="rail__dot" style="margin:0 auto 8px">${icon(stage.icon, 'icon icon--sm')}</div>
+        <div class="stage-overview__count" id="stage-count-${stage.key.replace(/\s+/g, '-')}">0</div>
+        <div class="rail__label">${stage.label}</div>
+      </button>
+    `).join('');
+    overviewEl.querySelectorAll('.stage-overview__stop').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.stageKey;
+        setFilter(activeFilter === key ? null : key);
+      });
+    });
+    statsBuilt = true;
+  }
+
+  animateNumber(document.getElementById('stat-total'), data.total);
+  animateNumber(document.getElementById('stat-resolved-pct'), resolvedPct, '%');
+  animateNumber(document.getElementById('stat-in-progress'), data.by_status['In Progress'] || 0);
+  animateNumber(document.getElementById('stat-awaiting'), data.by_status['Reported'] || 0);
+
+  STAGES.forEach(stage => {
+    const el = document.getElementById(`stage-count-${stage.key.replace(/\s+/g, '-')}`);
+    if (el) animateNumber(el, data.by_status[stage.key] || 0);
+  });
+
+  document.querySelectorAll('.stage-overview__stop').forEach(btn => {
+    btn.classList.toggle('stage-overview__stop--active', btn.dataset.stageKey === activeFilter);
+  });
+}
+
+function setFilter(stageKey) {
+  activeFilter = stageKey;
+  const chipRow = document.getElementById('filter-chip-row');
+  if (stageKey) {
+    const stage = STAGES.find(s => s.key === stageKey);
+    chipRow.innerHTML = `
+      <div class="filter-chip">
+        Showing: ${stage.label}
+        <button type="button" id="clear-filter" aria-label="Clear filter">&times;</button>
+      </div>`;
+    document.getElementById('clear-filter').addEventListener('click', () => setFilter(null));
+  } else {
+    chipRow.innerHTML = '';
+  }
+  document.querySelectorAll('.stage-overview__stop').forEach(btn => {
+    btn.classList.toggle('stage-overview__stop--active', btn.dataset.stageKey === activeFilter);
+  });
+  loadReports();
 }
 
 async function updateStatus(reportId, status) {
@@ -151,7 +243,10 @@ async function updateStatus(reportId, status) {
 }
 
 async function loadReports() {
-  const res = await fetch(`${API_BASE}/reports`);
+  const url = activeFilter
+    ? `${API_BASE}/reports?status=${encodeURIComponent(activeFilter)}`
+    : `${API_BASE}/reports`;
+  const res = await fetch(url);
   const reports = await res.json();
   const list = document.getElementById('reports-list');
   const emptyState = document.getElementById('empty-state');
@@ -161,6 +256,9 @@ async function loadReports() {
 
   if (reports.length === 0) {
     emptyState.classList.remove('hidden');
+    emptyState.querySelector('p').innerHTML = activeFilter
+      ? 'No reports at this stage right now.'
+      : `No reports yet. <a href="report.html">Report the first one.</a>`;
     return;
   }
   emptyState.classList.add('hidden');
@@ -170,17 +268,21 @@ async function loadReports() {
     const current = stageIndex(r.status);
 
     const card = document.createElement('div');
-    card.className = 'ticket report-ticket';
+    card.className = `ticket report-ticket report-ticket--${r.category}`;
     card.innerHTML = `
       <img class="report-ticket__photo" src="${API_BASE}${r.image_path}" alt="">
       <div>
         <div class="report-ticket__head">
           <div class="report-ticket__title">
-            ${icon(meta.icon, 'icon icon--lg')}
+            <span class="cat-chip cat-chip--${r.category} cat-chip--sm">${icon(meta.icon)}</span>
             <div>
               <div class="report-ticket__category">${meta.label}</div>
-              <div class="report-ticket__id">#${r.id} &middot; ${Math.round(r.confidence * 100)}% confidence${r.needs_review ? ' &middot; needs review' : ''}</div>
+              <div class="report-ticket__id">Report #${r.id}</div>
             </div>
+          </div>
+          <div class="flag flag--sm ${r.needs_review ? 'flag--caution' : 'flag--good'}">
+            ${icon(r.needs_review ? 'warning' : 'check', 'icon icon--sm')}
+            ${Math.round(r.confidence * 100)}% confidence${r.needs_review ? ', needs review' : ''}
           </div>
         </div>
         <div class="report-ticket__address">${icon('pin', 'icon icon--sm')}<span>${r.address}</span></div>
@@ -211,6 +313,8 @@ async function loadReports() {
 
 async function refresh() {
   await Promise.all([loadStats(), loadReports()]);
+  const statusEl = document.getElementById('live-status');
+  if (statusEl) statusEl.textContent = 'Live. Updated just now.';
 }
 refresh();
 setInterval(refresh, 15000);
