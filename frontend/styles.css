@@ -8,7 +8,8 @@
    ========================================================================= */
 
 :root {
-  /* --- color: road-sign system, each hue carries a real meaning --- */
+  /* --- color: road-sign system, each hue carries a real meaning, pushed
+     to full saturation so the app reads as colorful rather than muted --- */
   --ink: #1E2227;
   --ink-soft: #4B5057;
   --paper: #EFEDE6;       /* concrete, not cream: cooler, greyer */
@@ -16,27 +17,36 @@
   --line: #CFCBBF;
   --line-strong: #1E2227;
 
-  --route-blue: #1D4E89;   /* service / acknowledged */
-  --route-blue-tint: #E3EAF3;
-  --caution: #F2A30F;      /* reported / warning */
-  --caution-tint: #FDF1DA;
-  --stop-red: #C7372A;     /* needs review / urgent */
-  --stop-red-tint: #F8E3E0;
-  --go-green: #1A7A4C;     /* resolved / guide sign */
-  --go-green-tint: #E1EFE6;
-  --progress-amber: #B3690A; /* in progress */
-  --progress-amber-tint: #F3E4D1;
+  --route-blue: #2457C5;   /* service / acknowledged */
+  --route-blue-tint: #E1EBFC;
+  --caution: #FFB300;      /* reported / warning */
+  --caution-tint: #FFF1D1;
+  --stop-red: #E8402F;     /* needs review / urgent */
+  --stop-red-tint: #FCE1DD;
+  --go-green: #16A163;     /* resolved / guide sign */
+  --go-green-tint: #DBF5E7;
+  --progress-amber: #E6690C; /* in progress */
+  --progress-amber-tint: #FDE6D4;
 
   /* category accents — each issue type gets its own identity, like a
-     utility map's color-coded lines (water = teal, power = yellow) */
-  --cat-pothole: var(--stop-red);
-  --cat-pothole-tint: var(--stop-red-tint);
-  --cat-garbage: #5C6B3F;
-  --cat-garbage-tint: #E7E9DC;
-  --cat-streetlight: var(--caution);
-  --cat-streetlight-tint: var(--caution-tint);
-  --cat-water: #0E7C86;
-  --cat-water-tint: #DCEBEC;
+     utility map's color-coded lines (water = blue, power = yellow),
+     each backed by a two-stop gradient for a richer, less flat chip */
+  --cat-pothole: #E8402F;
+  --cat-pothole-grad: linear-gradient(135deg, #FF7A59 0%, #E8402F 55%, #B8231A 100%);
+  --cat-pothole-tint: #FCE1DD;
+  --cat-garbage: #2FAE4E;
+  --cat-garbage-grad: linear-gradient(135deg, #8BE07F 0%, #2FAE4E 55%, #1B7A37 100%);
+  --cat-garbage-tint: #DFF6E2;
+  --cat-streetlight: #FFB300;
+  --cat-streetlight-grad: linear-gradient(135deg, #FFE082 0%, #FFB300 55%, #E67E00 100%);
+  --cat-streetlight-tint: #FFF1D1;
+  --cat-water: #1E88E5;
+  --cat-water-grad: linear-gradient(135deg, #6EC6FF 0%, #1E88E5 55%, #0D5FA8 100%);
+  --cat-water-tint: #DCEEFC;
+
+  /* a vivid, dark-enough-for-white-text sunset wash for heroes/header */
+  --grad-vivid: linear-gradient(135deg, #3A1C71 0%, #D76D77 55%, #FFAF7B 100%);
+  --grad-vivid-deep: linear-gradient(120deg, #1E2227 0%, #3A1C71 55%, #AD1457 100%);
 
   /* --- type --- */
   --font-display: "Big Shoulders", "Arial Narrow", sans-serif;
@@ -56,7 +66,13 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   font-family: var(--font-body);
-  background: var(--paper);
+  background:
+    radial-gradient(circle at 8% 4%, rgba(255,175,123,0.30) 0%, transparent 38%),
+    radial-gradient(circle at 92% 12%, rgba(110,198,255,0.28) 0%, transparent 42%),
+    radial-gradient(circle at 15% 92%, rgba(139,224,127,0.26) 0%, transparent 42%),
+    radial-gradient(circle at 90% 95%, rgba(255,179,0,0.22) 0%, transparent 40%),
+    var(--paper);
+  background-attachment: fixed;
   color: var(--ink);
   font-size: 16px;
   line-height: 1.5;
@@ -90,7 +106,7 @@ a { color: var(--route-blue); }
    Header / nav — a route sign: mark + wordmark, two destinations
    --------------------------------------------------------------------- */
 .site-header {
-  background: var(--ink);
+  background: var(--grad-vivid-deep);
   color: var(--paper);
   border-bottom: 4px solid var(--caution);
 }
@@ -159,7 +175,7 @@ a { color: var(--route-blue); }
 
 .hero {
   margin: 0 0 var(--sp-6);
-  background: var(--ink);
+  background: var(--grad-vivid);
   color: var(--paper);
   border: 2px solid var(--line-strong);
   border-top: none;
@@ -172,7 +188,14 @@ a { color: var(--route-blue); }
   content: '';
   position: absolute; inset: 0;
   background-image: repeating-linear-gradient(135deg,
-    rgba(239,237,230,0.055) 0 2px, transparent 2px 28px);
+    rgba(255,255,255,0.08) 0 2px, transparent 2px 28px);
+  pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute; inset: -40% -10% auto auto;
+  width: 60%; height: 140%;
+  background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%);
   pointer-events: none;
 }
 .hero__inner { position: relative; }
@@ -182,13 +205,15 @@ a { color: var(--route-blue); }
   text-transform: uppercase;
   max-width: 14ch;
   color: var(--paper);
+  text-shadow: 0 2px 18px rgba(0,0,0,0.28);
   opacity: 0;
   transform: translateY(10px);
   animation: hero-in 0.5s ease-out 0.05s forwards;
 }
 .hero p {
   margin: var(--sp-3) 0 0;
-  color: rgba(239,237,230,0.78);
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 10px rgba(0,0,0,0.22);
   font-size: 17px;
   max-width: 48ch;
   opacity: 0;
@@ -243,11 +268,12 @@ a { color: var(--route-blue); }
   flex-shrink: 0;
 }
 .cat-chip .icon { color: var(--paper-raised); width: 22px; height: 22px; }
-.cat-chip--pothole { background: var(--cat-pothole); }
-.cat-chip--garbage { background: var(--cat-garbage); }
-.cat-chip--broken_streetlight { background: var(--cat-streetlight); color: var(--ink); }
+.cat-chip { box-shadow: 0 3px 10px rgba(0,0,0,0.22); }
+.cat-chip--pothole { background: var(--cat-pothole-grad); }
+.cat-chip--garbage { background: var(--cat-garbage-grad); }
+.cat-chip--broken_streetlight { background: var(--cat-streetlight-grad); color: var(--ink); }
 .cat-chip--broken_streetlight .icon { color: var(--ink); }
-.cat-chip--water_leakage { background: var(--cat-water); }
+.cat-chip--water_leakage { background: var(--cat-water-grad); }
 .cat-chip--sm { width: 32px; height: 32px; }
 .cat-chip--sm .icon { width: 16px; height: 16px; }
 
@@ -292,8 +318,12 @@ a { color: var(--route-blue); }
 .btn:hover:not(:disabled) { transform: translateY(-2px); }
 .btn:active:not(:disabled) { transform: translateY(0); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn--primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.btn--primary:hover:not(:disabled) { background: #30353c; }
+.btn--primary {
+  background: linear-gradient(135deg, #3A1C71 0%, #2457C5 100%);
+  color: var(--paper); border-color: #241352;
+  box-shadow: 0 4px 14px rgba(58,28,113,0.35);
+}
+.btn--primary:hover:not(:disabled) { background: linear-gradient(135deg, #4A2690 0%, #2f6ae0 100%); }
 .btn--block { width: 100%; }
 .btn-row { display: flex; gap: var(--sp-3); margin-top: var(--sp-3); }
 .btn-row .btn { flex: 1; }
@@ -319,13 +349,13 @@ a { color: var(--route-blue); }
   text-align: left;
   transition: transform 0.12s ease, border-color 0.12s ease;
 }
-.category-tile:hover { transform: translateY(-2px); border-color: var(--route-blue); }
+.category-tile:hover { transform: translateY(-2px); border-color: var(--route-blue); box-shadow: 0 6px 16px rgba(36,87,197,0.18); }
 .category-tile:active { transform: translateY(0); }
 .category-tile__name { font-weight: 700; font-size: 14px; }
 .category-tile[aria-pressed="true"] {
-  background: var(--ink);
+  background: var(--grad-vivid-deep);
   color: var(--paper);
-  border-color: var(--ink);
+  border-color: #241352;
 }
 .category-tile__detected {
   font-size: 11px; font-weight: 700; color: var(--go-green);
@@ -444,10 +474,10 @@ a { color: var(--route-blue); }
   font-variant-numeric: tabular-nums;
 }
 .stat__label { font-size: 13px; color: var(--ink-soft); font-weight: 600; margin-top: 4px; }
-.stat--blue { border-left-color: var(--route-blue); }
-.stat--green { border-left-color: var(--go-green); }
-.stat--amber { border-left-color: var(--caution); }
-.stat--red { border-left-color: var(--stop-red); }
+.stat--blue { border-left-color: var(--route-blue); background: linear-gradient(135deg, var(--paper-raised) 45%, var(--route-blue-tint) 100%); }
+.stat--green { border-left-color: var(--go-green); background: linear-gradient(135deg, var(--paper-raised) 45%, var(--go-green-tint) 100%); }
+.stat--amber { border-left-color: var(--caution); background: linear-gradient(135deg, var(--paper-raised) 45%, var(--caution-tint) 100%); }
+.stat--red { border-left-color: var(--stop-red); background: linear-gradient(135deg, var(--paper-raised) 45%, var(--stop-red-tint) 100%); }
 
 /* Aggregate stage overview: how many reports sit at each stop right now */
 .stage-overview {
@@ -509,7 +539,7 @@ a { color: var(--route-blue); }
 /* Active filter chip, shown when a stage-overview stop is clicked */
 .filter-chip {
   display: inline-flex; align-items: center; gap: var(--sp-2);
-  background: var(--ink); color: var(--paper);
+  background: var(--grad-vivid-deep); color: var(--paper);
   border-radius: var(--radius);
   padding: 7px 8px 7px 14px;
   font-size: 13px; font-weight: 700;
@@ -533,7 +563,7 @@ a { color: var(--route-blue); }
   transition: background 0.12s ease;
 }
 .stage-overview__stop:hover { background: var(--line); background: rgba(0,0,0,0.04); }
-.stage-overview__stop--active { background: var(--caution-tint); }
+.stage-overview__stop--active { background: linear-gradient(135deg, var(--caution-tint), var(--route-blue-tint)); box-shadow: inset 0 0 0 2px var(--caution); }
 .stage-overview__stop--active .rail__dot { border-color: var(--caution); }
 
 /* Live indicator dot */
