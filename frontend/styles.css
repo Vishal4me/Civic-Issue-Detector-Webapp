@@ -1,0 +1,436 @@
+/* =========================================================================
+   Streetline design system
+   Visual language borrowed from the subject itself: road signage, work
+   tickets, and transit route maps. Progress through a report's four stages
+   is drawn as a route line with stations, not a generic progress bar —
+   because that is literally how the data works (Reported -> Acknowledged
+   -> In Progress -> Resolved is a line with stops, not a percentage).
+   ========================================================================= */
+
+:root {
+  /* --- color: road-sign system, each hue carries a real meaning --- */
+  --ink: #1E2227;
+  --ink-soft: #4B5057;
+  --paper: #EFEDE6;       /* concrete, not cream: cooler, greyer */
+  --paper-raised: #F7F6F1;
+  --line: #CFCBBF;
+  --line-strong: #1E2227;
+
+  --route-blue: #1D4E89;   /* service / acknowledged */
+  --route-blue-tint: #E3EAF3;
+  --caution: #F2A30F;      /* reported / warning */
+  --caution-tint: #FDF1DA;
+  --stop-red: #C7372A;     /* needs review / urgent */
+  --stop-red-tint: #F8E3E0;
+  --go-green: #1A7A4C;     /* resolved / guide sign */
+  --go-green-tint: #E1EFE6;
+  --progress-amber: #B3690A; /* in progress */
+  --progress-amber-tint: #F3E4D1;
+
+  /* --- type --- */
+  --font-display: "Big Shoulders", "Arial Narrow", sans-serif;
+  --font-body: "Public Sans", -apple-system, "Segoe UI", sans-serif;
+
+  /* --- spacing scale --- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  --radius: 3px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  margin: 0;
+  color: var(--ink);
+}
+
+a { color: var(--route-blue); }
+
+:focus-visible {
+  outline: 3px solid var(--route-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+.icon { width: 20px; height: 20px; flex-shrink: 0; }
+.icon--sm { width: 16px; height: 16px; }
+.icon--lg { width: 28px; height: 28px; }
+.icon--xl { width: 40px; height: 40px; }
+
+/* ---------------------------------------------------------------------
+   Header / nav — a route sign: mark + wordmark, two destinations
+   --------------------------------------------------------------------- */
+.site-header {
+  background: var(--ink);
+  color: var(--paper);
+  border-bottom: 4px solid var(--caution);
+}
+.site-header__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--sp-3) var(--sp-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  text-decoration: none;
+  color: var(--paper);
+}
+.brand__mark {
+  width: 30px; height: 30px;
+  background: var(--caution);
+  color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  transform: rotate(45deg);
+  border-radius: 4px;
+}
+.brand__mark svg { transform: rotate(-45deg); width: 18px; height: 18px; }
+.brand__name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.3px;
+}
+.site-nav { display: flex; gap: var(--sp-2); }
+.site-nav a {
+  color: var(--paper);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  display: flex; align-items: center; gap: 6px;
+}
+.site-nav a:hover, .site-nav a[aria-current="page"] {
+  border-color: rgba(239,237,230,0.35);
+}
+.site-nav a[aria-current="page"] { background: rgba(239,237,230,0.1); }
+
+/* ---------------------------------------------------------------------
+   Page shell
+   --------------------------------------------------------------------- */
+.page { max-width: 1080px; margin: 0 auto; padding: var(--sp-6) var(--sp-5) var(--sp-8); }
+.page--narrow { max-width: 520px; }
+
+.hero { margin-bottom: var(--sp-6); }
+.hero h1 {
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 1.05;
+  text-transform: uppercase;
+  max-width: 14ch;
+}
+.hero p {
+  margin: var(--sp-3) 0 0;
+  color: var(--ink-soft);
+  font-size: 17px;
+  max-width: 48ch;
+}
+
+/* ---------------------------------------------------------------------
+   Ticket card — the base surface for anything "on the record":
+   sharp corners, thick rule, no shadow. A paperwork object, not a
+   floating SaaS panel.
+   --------------------------------------------------------------------- */
+.ticket {
+  background: var(--paper-raised);
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius);
+  padding: var(--sp-5);
+}
+.ticket + .ticket { margin-top: var(--sp-4); }
+.ticket__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin: 0 0 var(--sp-3);
+}
+
+/* ---------------------------------------------------------------------
+   Buttons
+   --------------------------------------------------------------------- */
+.btn {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  padding: 13px 20px;
+  border-radius: var(--radius);
+  border: 2px solid var(--line-strong);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  background: var(--paper-raised);
+  color: var(--ink);
+  transition: transform 0.08s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn--primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn--primary:hover:not(:disabled) { background: #30353c; }
+.btn--block { width: 100%; }
+.btn-row { display: flex; gap: var(--sp-3); margin-top: var(--sp-3); }
+.btn-row .btn { flex: 1; }
+
+/* ---------------------------------------------------------------------
+   Category picker — icon tiles instead of a <select>. Each category is
+   a destination on the map, picked by its pictogram, not a text label.
+   --------------------------------------------------------------------- */
+.category-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+.category-tile {
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  padding: var(--sp-4) var(--sp-3);
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2);
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+}
+.category-tile .icon { color: var(--ink-soft); }
+.category-tile__name { font-weight: 700; font-size: 14px; }
+.category-tile[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.category-tile[aria-pressed="true"] .icon { color: var(--caution); }
+.category-tile__detected {
+  font-size: 11px; font-weight: 700; color: var(--go-green);
+  display: flex; align-items: center; gap: 4px;
+}
+.category-tile[aria-pressed="true"] .category-tile__detected { color: var(--caution); }
+
+/* ---------------------------------------------------------------------
+   Confidence flag
+   --------------------------------------------------------------------- */
+.flag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 700;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+}
+.flag--good { background: var(--go-green-tint); color: var(--go-green); }
+.flag--caution { background: var(--caution-tint); color: #8a5d00; }
+.flag--bad { background: var(--stop-red-tint); color: var(--stop-red); }
+
+/* ---------------------------------------------------------------------
+   Route / stage rail — THE signature element. A literal transit line
+   with four stations. Used two ways: (a) small + read-only on a ticket
+   card, (b) large + clickable as the actual status control.
+   --------------------------------------------------------------------- */
+.rail {
+  --rail-color: var(--line);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  position: relative;
+  margin-top: var(--sp-4);
+}
+.rail__track {
+  position: absolute;
+  top: 13px; left: 12.5%; right: 12.5%;
+  height: 3px;
+  background: var(--line);
+  z-index: 0;
+}
+.rail__track-fill {
+  position: absolute;
+  top: 13px; left: 12.5%;
+  height: 3px;
+  background: var(--go-green);
+  z-index: 1;
+  transition: width 0.25s ease;
+}
+.rail__stop {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  cursor: pointer;
+  padding: 0;
+  color: var(--ink-soft);
+}
+.rail__stop:disabled { cursor: default; }
+.rail__dot {
+  width: 27px; height: 27px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  background: var(--paper-raised);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--line-strong);
+}
+.rail__dot .icon { width: 13px; height: 13px; }
+.rail__label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
+}
+.rail__stop--done .rail__dot { background: var(--go-green); border-color: var(--go-green); color: var(--paper); }
+.rail__stop--done .rail__label { color: var(--ink); }
+.rail__stop--current .rail__dot {
+  background: var(--caution); border-color: var(--caution); color: var(--ink);
+  box-shadow: 0 0 0 4px var(--caution-tint);
+}
+.rail__stop--current .rail__label { color: var(--ink); }
+.rail__stop--clickable:hover .rail__dot { border-color: var(--route-blue); }
+
+.rail--sm .rail__dot { width: 20px; height: 20px; border-width: 2px; }
+.rail--sm .rail__dot .icon { width: 10px; height: 10px; }
+.rail--sm .rail__label { font-size: 10px; }
+.rail--sm .rail__track, .rail--sm .rail__track-fill { top: 9px; }
+
+/* ---------------------------------------------------------------------
+   Stats strip — route-sign tiles, bold condensed numerals
+   --------------------------------------------------------------------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.stat {
+  border: 2px solid var(--line-strong);
+  border-left-width: 8px;
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  padding: var(--sp-4);
+}
+.stat__num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 40px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.stat__label { font-size: 13px; color: var(--ink-soft); font-weight: 600; margin-top: 4px; }
+.stat--blue { border-left-color: var(--route-blue); }
+.stat--green { border-left-color: var(--go-green); }
+.stat--amber { border-left-color: var(--caution); }
+.stat--red { border-left-color: var(--stop-red); }
+
+/* Aggregate stage overview: how many reports sit at each stop right now */
+.stage-overview {
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+.stage-overview__title { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin: 0 0 var(--sp-4); }
+.stage-overview__rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-2); }
+.stage-overview__stop { text-align: center; }
+.stage-overview__count {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------
+   Map frame
+   --------------------------------------------------------------------- */
+.map-frame {
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: var(--sp-5);
+}
+#map { height: 360px; }
+
+/* ---------------------------------------------------------------------
+   Report tickets list
+   --------------------------------------------------------------------- */
+.report-ticket { display: grid; grid-template-columns: 76px 1fr; gap: var(--sp-4); }
+.report-ticket__photo {
+  width: 76px; height: 76px; object-fit: cover; border-radius: var(--radius);
+  border: 2px solid var(--line-strong);
+  background: var(--line);
+}
+.report-ticket__head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap;
+}
+.report-ticket__title { display: flex; align-items: center; gap: var(--sp-2); }
+.report-ticket__title .icon { color: var(--ink-soft); }
+.report-ticket__category { font-weight: 800; font-size: 16px; }
+.report-ticket__id { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+.report-ticket__address { color: var(--ink-soft); font-size: 13.5px; margin-top: 2px; display: flex; gap: 5px; align-items: flex-start; }
+.report-ticket__address .icon { margin-top: 1px; }
+
+.empty-state {
+  text-align: center;
+  padding: var(--sp-8) var(--sp-4);
+  color: var(--ink-soft);
+}
+.empty-state .icon--xl { margin-bottom: var(--sp-3); color: var(--line); }
+
+/* ---------------------------------------------------------------------
+   Capture flow (report.html specific pieces shared enough to live here)
+   --------------------------------------------------------------------- */
+.capture-stage { position: relative; }
+video, img.capture-preview {
+  width: 100%; display: block; border-radius: var(--radius);
+  background: #11141a;
+  border: 2px solid var(--line-strong);
+}
+canvas.visually-hidden { display: none; }
+
+.field-label {
+  font-size: 13px; font-weight: 700; color: var(--ink-soft);
+  display: block; margin-bottom: var(--sp-2);
+}
+
+.status-line { font-size: 13.5px; margin-top: var(--sp-3); display: flex; align-items: center; gap: 6px; }
+.status-line--muted { color: var(--ink-soft); }
+.status-line--good { color: var(--go-green); font-weight: 700; }
+.status-line--bad { color: var(--stop-red); font-weight: 700; }
+
+footer.site-footer {
+  text-align: center; color: var(--ink-soft); font-size: 13px;
+  padding: var(--sp-6) var(--sp-4);
+}
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .report-ticket { grid-template-columns: 60px 1fr; }
+  .report-ticket__photo { width: 60px; height: 60px; }
+  .rail__label { font-size: 9.5px; }
+  .site-nav a span.nav-text { display: none; }
+}
