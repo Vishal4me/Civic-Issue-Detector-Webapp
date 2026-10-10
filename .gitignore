@@ -1,0 +1,7 @@
+backend/__pycache__/
+backend/civic_reports.db
+backend/.env
+backend/uploads/*.jpg
+backend/uploads/*.jpeg
+backend/uploads/*.png
+!backend/uploads/.gitkeep

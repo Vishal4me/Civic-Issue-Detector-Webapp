@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Civic Issues Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --border: #2a2e38;
+    --text: #e8eaed; --muted: #9aa0ab; --accent: #4f8cff;
+    --good: #3ddc84; --warn: #ffb545; --bad: #ff5d5d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 18px; margin: 0; }
+  header a { color: var(--muted); text-decoration: none; font-size: 14px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px; }
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .stat-card .num { font-size: 26px; font-weight: 700; }
+  .stat-card .label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  #map { height: 360px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 12px; overflow: hidden; }
+  th, td { padding: 10px 12px; text-align: left; font-size: 13px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; background: #11131a; }
+  tr:last-child td { border-bottom: none; }
+  img.thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; }
+  select.status-select {
+    background: #11131a; color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 8px; font-size: 12px;
+  }
+  .pill { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .pill.Reported { background: rgba(255,181,69,0.15); color: var(--warn); }
+  .pill.Acknowledged { background: rgba(79,140,255,0.15); color: var(--accent); }
+  .pill.In.Progress, .pill.InProgress { background: rgba(79,140,255,0.15); color: var(--accent); }
+  .pill.Resolved { background: rgba(61,220,132,0.15); color: var(--good); }
+  .muted { color: var(--muted); }
+  .empty { text-align: center; padding: 40px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Civic Issues Dashboard</h1>
+  <a href="report.html">+ Report an issue</a>
+</header>
+
+<main>
+  <div class="stats-row" id="stats-row"></div>
+  <div id="map"></div>
+  <table id="reports-table">
+    <thead>
+      <tr>
+        <th>Photo</th><th>ID</th><th>Category</th><th>Confidence</th>
+        <th>Location</th><th>Reported</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="reports-body"></tbody>
+  </table>
+  <div id="empty-msg" class="empty hidden">No reports yet. Submit one from the report page.</div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API_BASE = window.location.origin;
+const CATEGORY_LABELS = {
+  pothole: 'Pothole',
+  garbage: 'Garbage',
+  broken_streetlight: 'Broken Streetlight',
+  water_leakage: 'Water Leakage',
+};
+const STATUSES = ['Reported', 'Acknowledged', 'In Progress', 'Resolved'];
+
+const map = L.map('map').setView([26.8467, 80.9462], 12); // default: Lucknow
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  maxZoom: 19,
+}).addTo(map);
+let markers = [];
+
+async function loadStats() {
+  const res = await fetch(`${API_BASE}/stats`);
+  const data = await res.json();
+  const row = document.getElementById('stats-row');
+  const resolvedPct = data.total ? Math.round((data.resolved / data.total) * 100) : 0;
+  row.innerHTML = `
+    <div class="stat-card"><div class="num">${data.total}</div><div class="label">Total reports</div></div>
+    <div class="stat-card"><div class="num">${data.resolved}</div><div class="label">Resolved</div></div>
+    <div class="stat-card"><div class="num">${resolvedPct}%</div><div class="label">Resolution rate</div></div>
+    <div class="stat-card"><div class="num">${data.by_status['Reported'] || 0}</div><div class="label">Awaiting action</div></div>
+  `;
+}
+
+async function loadReports() {
+  const res = await fetch(`${API_BASE}/reports`);
+  const reports = await res.json();
+  const body = document.getElementById('reports-body');
+  const emptyMsg = document.getElementById('empty-msg');
+  body.innerHTML = '';
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+
+  if (reports.length === 0) {
+    emptyMsg.classList.remove('hidden');
+    return;
+  }
+  emptyMsg.classList.add('hidden');
+
+  reports.forEach(r => {
+    const tr = document.createElement('tr');
+    const statusOptions = STATUSES.map(s => `<option value="${s}" ${s === r.status ? 'selected' : ''}>${s}</option>`).join('');
+    tr.innerHTML = `
+      <td><img class="thumb" src="${API_BASE}${r.image_path}" alt="report photo"></td>
+      <td>#${r.id}</td>
+      <td>${CATEGORY_LABELS[r.category] || r.category}${r.needs_review ? ' <span class="muted">(low confidence)</span>' : ''}</td>
+      <td>${Math.round(r.confidence * 100)}%</td>
+      <td class="muted">${r.address}</td>
+      <td class="muted">${new Date(r.created_at).toLocaleString()}</td>
+      <td>
+        <select class="status-select" data-id="${r.id}">${statusOptions}</select>
+      </td>
+    `;
+    body.appendChild(tr);
+
+    const marker = L.marker([r.latitude, r.longitude]).addTo(map);
+    marker.bindPopup(`<b>${CATEGORY_LABELS[r.category] || r.category}</b><br>${r.status}<br>${r.address}`);
+    markers.push(marker);
+  });
+
+  if (reports.length) {
+    const group = L.featureGroup(markers);
+    map.fitBounds(group.getBounds().pad(0.3));
+  }
+
+  document.querySelectorAll('.status-select').forEach(sel => {
+    sel.addEventListener('change', async (e) => {
+      const id = e.target.dataset.id;
+      const form = new FormData();
+      form.append('status', e.target.value);
+      await fetch(`${API_BASE}/reports/${id}/status`, { method: 'POST', body: form });
+      loadStats();
+    });
+  });
+}
+
+async function refresh() {
+  await Promise.all([loadStats(), loadReports()]);
+}
+refresh();
+setInterval(refresh, 15000); // auto-refresh so the dashboard feels "live"
+</script>
+</body>
+</html>

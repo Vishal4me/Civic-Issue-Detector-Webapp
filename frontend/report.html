@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report a Civic Issue</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --border: #2a2e38;
+    --text: #e8eaed; --muted: #9aa0ab; --accent: #4f8cff;
+    --good: #3ddc84; --warn: #ffb545; --bad: #ff5d5d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 18px; margin: 0; }
+  header a { color: var(--muted); text-decoration: none; font-size: 14px; }
+  main { max-width: 480px; margin: 0 auto; padding: 20px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 16px;
+  }
+  video, img.preview {
+    width: 100%; border-radius: 10px; background: #000; display: block;
+  }
+  .row { display: flex; gap: 10px; margin-top: 12px; }
+  button {
+    flex: 1; padding: 12px 14px; border-radius: 10px; border: none;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  button.primary { background: var(--accent); color: white; }
+  button.secondary { background: #262a35; color: var(--text); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status-line { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .status-line.good { color: var(--good); }
+  .status-line.bad { color: var(--bad); }
+  select {
+    width: 100%; padding: 10px; border-radius: 8px; background: #11131a;
+    color: var(--text); border: 1px solid var(--border); font-size: 15px;
+  }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; margin-bottom: 8px;
+  }
+  .badge.high { background: rgba(61,220,132,0.15); color: var(--good); }
+  .badge.low { background: rgba(255,181,69,0.15); color: var(--warn); }
+  label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+  .hidden { display: none; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Report an Issue</h1>
+  <a href="dashboard.html">Dashboard →</a>
+</header>
+
+<main>
+
+  <div class="card" id="camera-card">
+    <label>1. Take a photo of the issue</label>
+    <video id="video" autoplay playsinline class="hidden"></video>
+    <img id="preview" class="preview hidden" alt="captured photo">
+    <canvas id="canvas" class="hidden"></canvas>
+    <div class="row">
+      <button class="secondary" id="start-camera-btn">Open Camera</button>
+      <button class="primary hidden" id="capture-btn">Capture</button>
+    </div>
+    <div class="row hidden" id="retake-row">
+      <button class="secondary" id="retake-btn">Retake</button>
+    </div>
+    <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden">
+    <div class="row">
+      <button class="secondary" id="upload-btn">Or choose a photo file</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="location-card">
+    <label>2. Location</label>
+    <div id="location-status" class="status-line">Getting your location…</div>
+  </div>
+
+  <div class="card hidden" id="classify-card">
+    <label>3. Detected issue — confirm or correct it</label>
+    <div id="classify-status" class="status-line">Analyzing photo…</div>
+    <div id="classify-result" class="hidden">
+      <span id="confidence-badge" class="badge"></span>
+      <select id="category-select">
+        <option value="pothole">Pothole</option>
+        <option value="garbage">Garbage / Waste Pile</option>
+        <option value="broken_streetlight">Broken Streetlight</option>
+        <option value="water_leakage">Water Leakage</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card hidden" id="submit-card">
+    <button class="primary" id="submit-btn" style="width:100%">Submit Report</button>
+    <div id="submit-status" class="status-line"></div>
+  </div>
+
+</main>
+
+<footer>Automated detection is a baseline heuristic — please confirm the category above before submitting.</footer>
+
+<script>
+const API_BASE = window.location.origin;
+
+const videoEl = document.getElementById('video');
+const previewEl = document.getElementById('preview');
+const canvasEl = document.getElementById('canvas');
+const startCameraBtn = document.getElementById('start-camera-btn');
+const captureBtn = document.getElementById('capture-btn');
+const retakeRow = document.getElementById('retake-row');
+const retakeBtn = document.getElementById('retake-btn');
+const fileInput = document.getElementById('file-input');
+const uploadBtn = document.getElementById('upload-btn');
+
+const locationCard = document.getElementById('location-card');
+const locationStatus = document.getElementById('location-status');
+
+const classifyCard = document.getElementById('classify-card');
+const classifyStatus = document.getElementById('classify-status');
+const classifyResult = document.getElementById('classify-result');
+const confidenceBadge = document.getElementById('confidence-badge');
+const categorySelect = document.getElementById('category-select');
+
+const submitCard = document.getElementById('submit-card');
+const submitBtn = document.getElementById('submit-btn');
+const submitStatus = document.getElementById('submit-status');
+
+let imageBlob = null;
+let latitude = null, longitude = null;
+let lastConfidence = 0;
+let stream = null;
+
+uploadBtn.onclick = () => fileInput.click();
+fileInput.onchange = () => {
+  if (fileInput.files && fileInput.files[0]) {
+    handleImageBlob(fileInput.files[0]);
+  }
+};
+
+startCameraBtn.onclick = async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    videoEl.srcObject = stream;
+    videoEl.classList.remove('hidden');
+    startCameraBtn.classList.add('hidden');
+    captureBtn.classList.remove('hidden');
+  } catch (e) {
+    alert('Could not access camera: ' + e.message + '\nTry "choose a photo file" instead.');
+  }
+};
+
+captureBtn.onclick = () => {
+  canvasEl.width = videoEl.videoWidth;
+  canvasEl.height = videoEl.videoHeight;
+  canvasEl.getContext('2d').drawImage(videoEl, 0, 0);
+  canvasEl.toBlob((blob) => handleImageBlob(blob), 'image/jpeg', 0.9);
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  videoEl.classList.add('hidden');
+  captureBtn.classList.add('hidden');
+};
+
+retakeBtn.onclick = () => {
+  previewEl.classList.add('hidden');
+  retakeRow.classList.add('hidden');
+  startCameraBtn.classList.remove('hidden');
+  classifyCard.classList.add('hidden');
+  submitCard.classList.add('hidden');
+  imageBlob = null;
+};
+
+function handleImageBlob(blob) {
+  imageBlob = blob;
+  previewEl.src = URL.createObjectURL(blob);
+  previewEl.classList.remove('hidden');
+  retakeRow.classList.remove('hidden');
+  startCameraBtn.classList.add('hidden');
+  captureBtn.classList.add('hidden');
+
+  locationCard.classList.remove('hidden');
+  getLocation();
+
+  classifyCard.classList.remove('hidden');
+  runClassification();
+}
+
+function getLocation() {
+  if (!navigator.geolocation) {
+    locationStatus.textContent = 'Geolocation not supported by this browser.';
+    locationStatus.classList.add('bad');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      latitude = pos.coords.latitude;
+      longitude = pos.coords.longitude;
+      locationStatus.textContent = `Lat ${latitude.toFixed(5)}, Lon ${longitude.toFixed(5)}`;
+      locationStatus.classList.add('good');
+      maybeShowSubmit();
+    },
+    (err) => {
+      locationStatus.textContent = 'Could not get location: ' + err.message;
+      locationStatus.classList.add('bad');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+async function runClassification() {
+  classifyStatus.textContent = 'Analyzing photo…';
+  classifyResult.classList.add('hidden');
+  const form = new FormData();
+  form.append('image', imageBlob, 'photo.jpg');
+  try {
+    const res = await fetch(`${API_BASE}/classify`, { method: 'POST', body: form });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    lastConfidence = data.confidence;
+    categorySelect.value = data.category;
+    const pct = Math.round(data.confidence * 100);
+    confidenceBadge.textContent = data.needs_review
+      ? `Low confidence (${pct}%) — please check this`
+      : `Detected with ${pct}% confidence`;
+    confidenceBadge.className = 'badge ' + (data.needs_review ? 'low' : 'high');
+    classifyStatus.textContent = '';
+    classifyResult.classList.remove('hidden');
+    maybeShowSubmit();
+  } catch (e) {
+    classifyStatus.textContent = 'Detection failed: ' + e.message + ' — pick the category manually below.';
+    classifyResult.classList.remove('hidden');
+    confidenceBadge.textContent = 'Manual selection needed';
+    confidenceBadge.className = 'badge low';
+    lastConfidence = 0;
+    maybeShowSubmit();
+  }
+}
+
+function maybeShowSubmit() {
+  if (imageBlob && latitude !== null) {
+    submitCard.classList.remove('hidden');
+  }
+}
+
+submitBtn.onclick = async () => {
+  submitBtn.disabled = true;
+  submitStatus.textContent = 'Submitting…';
+  submitStatus.className = 'status-line';
+
+  const form = new FormData();
+  form.append('image', imageBlob, 'photo.jpg');
+  form.append('latitude', latitude);
+  form.append('longitude', longitude);
+  form.append('category', categorySelect.value);
+  form.append('confidence', lastConfidence);
+
+  try {
+    const res = await fetch(`${API_BASE}/report`, { method: 'POST', body: form });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    submitStatus.textContent = data.email_sent
+      ? `Report #${data.id} submitted and emailed to the concerned authority.`
+      : `Report #${data.id} saved, but the alert email failed to send (${data.email_error || 'unknown error'}). It is still on the dashboard.`;
+    submitStatus.className = 'status-line ' + (data.email_sent ? 'good' : 'bad');
+  } catch (e) {
+    submitStatus.textContent = 'Submit failed: ' + e.message;
+    submitStatus.className = 'status-line bad';
+    submitBtn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>
