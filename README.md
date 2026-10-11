@@ -28,16 +28,17 @@ Open `report.html` on your **phone** (same Wi-Fi, use your laptop's local IP
 instead of `localhost`) to use the real camera and real GPS — desktop
 browsers can fake both, but it's much more convincing on a phone.
 
-## Why the recipient email is yours, for now
+## Why the recipient email is a project inbox, for now
 
-As instructed, `EMAIL_TO` in `.env.example` defaults to `vc810620@gmail.com`
-instead of a government address. The blueprint conversation that led to this
-project covers why: verified departmental emails for Lucknow Nagar Nigam
-were never confirmed publicly, so routing to a real address would silently
-fail. Swap `EMAIL_TO` for real, verified addresses once you have them — the
-code already supports comma-separating several recipients, and `emailer.py`
-is the only file that would need touching to add per-category routing
-(pothole → PWD, garbage → sanitation, etc.) later.
+As instructed, `EMAIL_TO` in `.env.example` defaults to
+`nagarmitrasolution@gmail.com` instead of a government address. The
+blueprint conversation that led to this project covers why: verified
+departmental emails for Lucknow Nagar Nigam were never confirmed publicly,
+so routing to a real address would silently fail. Swap `EMAIL_TO` for real,
+verified addresses once you have them — the code already supports
+comma-separating several recipients, and `emailer.py` is the only file that
+would need touching to add per-category routing (pothole → PWD, garbage →
+sanitation, etc.) later.
 
 ## Email setup (Gmail)
 
@@ -47,7 +48,7 @@ is the only file that would need touching to add per-category routing
    ```
    EMAIL_USER=your_sending_gmail@gmail.com
    EMAIL_PASSWORD=the_16_character_app_password
-   EMAIL_TO=vc810620@gmail.com
+   EMAIL_TO=nagarmitrasolution@gmail.com
    ```
 4. Restart the server. If email fails, the report is still saved — check the
    `email_error` field in the API response or the `reports` table.
