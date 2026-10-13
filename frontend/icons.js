@@ -45,6 +45,10 @@ const ICON_PATHS = {
     <path d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/>
     <circle cx="12" cy="13" r="3.4"/>
   `,
+  home: `
+    <path d="M3.5 11.5L12 4l8.5 7.5"/>
+    <path d="M5.5 10v9.5h5V14h3v5.5h5V10"/>
+  `,
   pin: `
     <path d="M12 21s-7-7.1-7-12a7 7 0 0 1 14 0c0 4.9-7 12-7 12z"/>
     <circle cx="12" cy="9" r="2.3"/>

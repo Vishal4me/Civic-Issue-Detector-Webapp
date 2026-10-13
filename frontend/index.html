@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NagarMitra — report what's broken on your street</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@700;800;900&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand" href="index.html">
+      <span class="brand__mark" data-icon="pin" data-icon-class="icon"></span>
+      <span class="brand__name">NagarMitra</span>
+    </a>
+    <nav class="site-nav">
+      <a href="index.html" aria-current="page">
+        <span data-icon="home" data-icon-class="icon icon--sm"></span>
+        <span class="nav-text">Home</span>
+      </a>
+      <a href="report.html">
+        <span data-icon="camera" data-icon-class="icon icon--sm"></span>
+        <span class="nav-text">Report</span>
+      </a>
+      <a href="dashboard.html">
+        <span data-icon="chart" data-icon-class="icon icon--sm"></span>
+        <span class="nav-text">Dashboard</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="stripe-bar"></div>
+  <div class="hero">
+    <div class="hero__inner">
+      <h1>Report what's broken on your street in under a minute.</h1>
+      <p>Take a photo of a pothole, a garbage pile, a dead streetlight or a leak. NagarMitra works out what it is and where it is, then sends it straight to the department that handles it.</p>
+      <div class="cta-row">
+        <a class="btn btn--primary" href="report.html">
+          <span data-icon="camera" data-icon-class="icon icon--sm"></span> Report an issue
+        </a>
+        <a class="btn btn--ghost-light" href="dashboard.html">
+          <span data-icon="chart" data-icon-class="icon icon--sm"></span> See the live dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <section class="intro-section">
+    <h2>How a report gets to the right desk</h2>
+    <p class="intro-lede">Four steps, no account needed. The photo and your location do most of the work.</p>
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-card__num">1</div>
+        <h3>Snap a photo</h3>
+        <p>Use your camera or pick an existing photo of the problem.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-card__num">2</div>
+        <h3>We detect &amp; locate</h3>
+        <p>The issue type is guessed from the photo and your GPS position is read automatically.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-card__num">3</div>
+        <h3>You confirm it</h3>
+        <p>Correct the category if needed, then submit. Nothing sends without this check.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-card__num">4</div>
+        <h3>Alert sent &amp; tracked</h3>
+        <p>An email goes out immediately, and the report appears on the dashboard for everyone to follow.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="intro-section">
+    <h2>What it can tell apart</h2>
+    <p class="intro-lede">Four categories, each with its own flag so a full dashboard reads at a glance.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="cat-chip cat-chip--pothole"><span data-icon="pothole" data-icon-class="icon"></span></span>
+        <div>
+          <h3>Pothole</h3>
+          <p>Deep or shallow, spotted from a street-level photo.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <span class="cat-chip cat-chip--garbage"><span data-icon="garbage" data-icon-class="icon"></span></span>
+        <div>
+          <h3>Garbage</h3>
+          <p>Overflowing bins and dumped waste piles.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <span class="cat-chip cat-chip--broken_streetlight"><span data-icon="streetlight" data-icon-class="icon"></span></span>
+        <div>
+          <h3>Broken streetlight</h3>
+          <p>Dark stretches of road, flagged from a night photo.</p>
+        </div>
+      </div>
+      <div class="feature-card">
+        <span class="cat-chip cat-chip--water_leakage"><span data-icon="water" data-icon-class="icon"></span></span>
+        <div>
+          <h3>Water leakage</h3>
+          <p>Burst pipes and standing leaks on the road or pavement.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="intro-section">
+    <p class="intro-note">The detector is a fast, explainable baseline, not a trained model. It's intentionally cautious, and flags low-confidence guesses for you to correct before anything is sent. See the project's README for how it works and how to swap in a trained model later.</p>
+  </section>
+
+  <section class="intro-section intro-cta-band">
+    <h2>Seen something today?</h2>
+    <p>It takes less time to report it than to walk past it twice.</p>
+    <div class="cta-row">
+      <a class="btn btn--primary" href="report.html">
+        <span data-icon="camera" data-icon-class="icon icon--sm"></span> Report an issue
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  NagarMitra: a civic issue reporting prototype, built for Lucknow.
+</footer>
+
+<script src="icons.js"></script>
+</body>
+</html>

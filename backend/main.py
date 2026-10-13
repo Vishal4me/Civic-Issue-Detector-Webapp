@@ -40,8 +40,9 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 @app.get("/")
 def root():
     # The Render dashboard (and anyone sharing the bare domain) links straight
-    # to this URL, so it should open the actual app, not a JSON status blob.
-    return RedirectResponse(url="/app/report.html")
+    # to this URL, so it should open the actual app, not a JSON status blob --
+    # starting on the intro page rather than jumping straight into the form.
+    return RedirectResponse(url="/app/index.html")
 
 
 @app.get("/api-info")
@@ -51,6 +52,7 @@ def api_info():
     return {
         "service": "civic-issue-reporter",
         "docs": "/docs",
+        "home": "/app/index.html",
         "report_page": "/app/report.html",
         "dashboard": "/app/dashboard.html",
     }
