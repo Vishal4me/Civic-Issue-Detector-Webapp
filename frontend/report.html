@@ -106,6 +106,9 @@
       <span data-icon="pin" data-icon-class="icon icon--sm"></span>
       <span id="location-text">Getting your location…</span>
     </div>
+    <button type="button" class="btn hidden" id="retry-location-btn" style="margin-top: var(--sp-3);">
+      <span data-icon="refresh" data-icon-class="icon icon--sm"></span> Retry location
+    </button>
   </div>
 
   <div class="ticket hidden" id="classify-card">
@@ -180,6 +183,8 @@ const uploadBtn = document.getElementById('upload-btn');
 const locationCard = document.getElementById('location-card');
 const locationStatus = document.getElementById('location-status');
 const locationText = document.getElementById('location-text');
+const retryLocationBtn = document.getElementById('retry-location-btn');
+retryLocationBtn.addEventListener('click', () => getLocation());
 
 const classifyCard = document.getElementById('classify-card');
 const classifyStatus = document.getElementById('classify-status');
@@ -252,25 +257,59 @@ function handleImageBlob(blob) {
   runClassification();
 }
 
+function onLocationSuccess(pos) {
+  latitude = pos.coords.latitude;
+  longitude = pos.coords.longitude;
+  locationText.textContent = `Lat ${latitude.toFixed(5)}, Lon ${longitude.toFixed(5)}`;
+  locationStatus.className = 'status-line status-line--good';
+  hide(retryLocationBtn);
+  maybeShowSubmit();
+}
+
+function friendlyLocationError(err) {
+  // GeolocationPositionError codes: 1 = PERMISSION_DENIED, 2 = POSITION_UNAVAILABLE, 3 = TIMEOUT
+  if (err.code === 1) return "Location permission denied. Allow location access in your browser's site settings, then retry.";
+  if (err.code === 2) return 'Your device could not determine a location right now. Check your connection and retry.';
+  return 'Location request timed out. Retry, or move somewhere with a clearer GPS/network signal.';
+}
+
 function getLocation() {
   if (!navigator.geolocation) {
     locationText.textContent = 'Geolocation not supported by this browser.';
     locationStatus.className = 'status-line status-line--bad';
     return;
   }
+  locationText.textContent = 'Getting your location…';
+  locationStatus.className = 'status-line status-line--muted';
+  hide(retryLocationBtn);
+
+  // First try: a real GPS fix (precise, but phones/laptops without a GPS
+  // chip or with a weak signal can take a while or never get one).
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      latitude = pos.coords.latitude;
-      longitude = pos.coords.longitude;
-      locationText.textContent = `Lat ${latitude.toFixed(5)}, Lon ${longitude.toFixed(5)}`;
-      locationStatus.className = 'status-line status-line--good';
-      maybeShowSubmit();
-    },
+    onLocationSuccess,
     (err) => {
-      locationText.textContent = 'Could not get location: ' + err.message;
-      locationStatus.className = 'status-line status-line--bad';
+      if (err.code !== 3) {
+        // Permission denied or position unavailable won't be fixed by
+        // retrying with different accuracy settings -- show it directly.
+        locationText.textContent = friendlyLocationError(err);
+        locationStatus.className = 'status-line status-line--bad';
+        show(retryLocationBtn);
+        return;
+      }
+      // Timed out waiting for a precise fix -- fall back to the faster
+      // Wi-Fi/IP-based location (less precise, but works on desktops and
+      // indoors where a GPS fix may never arrive).
+      navigator.geolocation.getCurrentPosition(
+        onLocationSuccess,
+        (err2) => {
+          locationText.textContent = friendlyLocationError(err2);
+          locationStatus.className = 'status-line status-line--bad';
+          show(retryLocationBtn);
+        },
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+      );
     },
-    { enableHighAccuracy: true, timeout: 10000 }
+    { enableHighAccuracy: true, timeout: 8000 }
   );
 }
 
