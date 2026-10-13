@@ -9,7 +9,7 @@ load_dotenv()  # load .env before anything reads os.environ
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 
 import db
 import geocode
@@ -39,6 +39,15 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 @app.get("/")
 def root():
+    # The Render dashboard (and anyone sharing the bare domain) links straight
+    # to this URL, so it should open the actual app, not a JSON status blob.
+    return RedirectResponse(url="/app/report.html")
+
+
+@app.get("/api-info")
+def api_info():
+    # The old root response, kept at its own path for anyone who wants a
+    # quick machine-readable pointer to the other URLs (e.g. curl scripts).
     return {
         "service": "civic-issue-reporter",
         "docs": "/docs",
