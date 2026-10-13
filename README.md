@@ -40,18 +40,31 @@ comma-separating several recipients, and `emailer.py` is the only file that
 would need touching to add per-category routing (pothole → PWD, garbage →
 sanitation, etc.) later.
 
-## Email setup (Gmail)
+## Email setup (Resend)
 
-1. Turn on 2-Step Verification on the sending Gmail account.
-2. Create an App Password: https://myaccount.google.com/apppasswords
+Alerts send over the [Resend](https://resend.com) API (plain HTTPS) rather
+than raw Gmail SMTP, because most free cloud hosts — Render included —
+now block outbound SMTP ports entirely, which breaks SMTP-based email the
+moment you deploy even with perfectly correct Gmail credentials. HTTPS
+isn't blocked anywhere, so this works identically locally and deployed.
+
+1. Sign up at https://resend.com using the **same address** as `EMAIL_TO`
+   below (e.g. `nagarmitrasolution@gmail.com`) — see the sandbox note.
+2. Create an API key: https://resend.com/api-keys
 3. In `.env`, set:
    ```
-   EMAIL_USER=your_sending_gmail@gmail.com
-   EMAIL_PASSWORD=the_16_character_app_password
+   RESEND_API_KEY=re_your_api_key_here
+   EMAIL_FROM=Streetline Alerts <onboarding@resend.dev>
    EMAIL_TO=nagarmitrasolution@gmail.com
    ```
 4. Restart the server. If email fails, the report is still saved — check the
    `email_error` field in the API response or the `reports` table.
+
+**Sandbox limitation:** until you verify your own domain on Resend
+(https://resend.com/domains), their shared sender (`onboarding@resend.dev`)
+can only deliver to the email address you signed up to Resend with — that's
+why step 1 says to use the same address as `EMAIL_TO`. If you later add real
+department addresses to `EMAIL_TO`, you'll need a verified domain first.
 
 ## How the pipeline works
 
