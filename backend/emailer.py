@@ -47,7 +47,7 @@ CATEGORY_LABELS = {
 def send_report_email(report_id, category, confidence, address, latitude, longitude,
                        image_bytes, image_filename):
     api_key = os.environ.get("RESEND_API_KEY")
-    from_addr = os.environ.get("EMAIL_FROM", "Streetline Alerts <onboarding@resend.dev>")
+    from_addr = os.environ.get("EMAIL_FROM", "NagarMitra Alerts <onboarding@resend.dev>")
     to_addrs = [a.strip() for a in os.environ.get("EMAIL_TO", "").split(",") if a.strip()]
 
     if not api_key or not to_addrs:

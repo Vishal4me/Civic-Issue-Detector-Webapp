@@ -54,7 +54,7 @@ isn't blocked anywhere, so this works identically locally and deployed.
 3. In `.env`, set:
    ```
    RESEND_API_KEY=re_your_api_key_here
-   EMAIL_FROM=Streetline Alerts <onboarding@resend.dev>
+   EMAIL_FROM=NagarMitra Alerts <onboarding@resend.dev>
    EMAIL_TO=nagarmitrasolution@gmail.com
    ```
 4. Restart the server. If email fails, the report is still saved — check the

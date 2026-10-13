@@ -1,5 +1,5 @@
 /*
- * Streetline icon set.
+ * NagarMitra icon set.
  * The four issue-category pictograms are full-color (fixed palette, not
  * currentColor) so they stay colorful and distinct everywhere they're
  * used — on a dark hero sign, inside a gradient chip, or on their own.
